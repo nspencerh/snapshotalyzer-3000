@@ -57,15 +57,27 @@ def list_instances(project):
 @click.option('--project', default=None,
     help='Only instances for project (tag project:<name>)')
 
-def crate_snapshots(project):
+def create_snapshots(project):
     "Create snapshot from volumes from EC2 instances"
 
     instances = filter_instances(project)
 
     for i in instances:
+        print("Stopping{0}.... ".format(i.id))
+
+        i.stop()
+        i.wait_until_stopped()
+
         for v in i.volumes.all():
-            print("Creating snapshot of {0}".format(v.id))
+            print("  Creating snapshot of {0}".format(v.id))
             v.create_snapshot(Description="Created by SnapshotAlyzer")
+
+        print("Starting {0}.... ".format(i.id))
+
+        i.start()
+        i.wait_until_running()
+
+    print("Job's done!")
     return
 ################################################################################
 #############LISTAR VOLUMES (LIST)##############################################
@@ -94,7 +106,7 @@ def list_volumes(project):
 @click.option('--project', default=None,
     help='Only snapshots for project (tag project:<name>)')
 
-def list_snapshors(project):
+def list_snapshots(project):
     "List EC2 Snapshots"
 
     instances = filter_instances(project)
